@@ -1,0 +1,168 @@
+local player = game:GetService("Players").LocalPlayer
+local gui = Instance.new("ScreenGui")
+gui.Parent = player:FindFirstChild("PlayerGui")
+
+-- Crear interfaz
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 220, 0, 140)
+frame.Position = UDim2.new(0.4, 0, 0.2, 0)
+frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+frame.Parent = gui
+frame.Active = true
+frame.Draggable = true -- Permite mover la interfaz
+
+-- Botón para minimizar
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Size = UDim2.new(0, 30, 0, 30)
+minimizeButton.Position = UDim2.new(1, -35, 0, 5)
+minimizeButton.Text = "–"
+minimizeButton.Parent = frame
+minimizeButton.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+
+-- Botón para restaurar
+local restoreButton = Instance.new("TextButton")
+restoreButton.Size = UDim2.new(0, 50, 0, 30)
+restoreButton.Position = UDim2.new(0, 5, 0, 5)
+restoreButton.Text = "+"
+restoreButton.Parent = gui
+restoreButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+restoreButton.Visible = false
+
+-- Texto "Treadmill" con colores
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.new(0, 0, 0, 5)
+title.Text = "MACRO AUTO PULL UP"
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 20
+title.TextColor3 = Color3.fromRGB(math.random(100,255), math.random(100,255), math.random(100,255))
+title.BackgroundTransparency = 1
+title.Parent = frame
+
+-- Efecto de cambio de color
+task.spawn(function()
+    while true do
+        title.TextColor3 = Color3.fromRGB(math.random(100,255), math.random(100,255), math.random(100,255))
+        task.wait(1)
+    end
+end)
+
+-- Botón Auto Treadmill Keys
+local autoPullUpsButton = Instance.new("TextButton")
+autoPullUpsButton.Size = UDim2.new(0, 200, 0, 40)
+autoPullUpsButton.Position = UDim2.new(0, 10, 0, 40)
+autoPullUpsButton.Text = "Auto Pull Ups: OFF"
+autoPullUpsButton.Parent = frame
+autoPullUpsButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+
+-- Variable de control
+local autoPullUps = false
+local validKeys = { W = Enum.KeyCode.W, A = Enum.KeyCode.A, S = Enum.KeyCode.S, D = Enum.KeyCode.D }
+local virtualInput = game:GetService("VirtualInputManager")
+local firstKeyPressedTime = nil
+local isPaused = false
+local pauseCount = 0 -- Variable para contar las pausas
+
+-- Función para obtener `Keys` desde la nueva ubicación
+local function checkFrame2Keys()
+    local treadmillGui = player.PlayerGui:FindFirstChild("TreadmillGain")
+    if treadmillGui then
+        local frame2 = treadmillGui:FindFirstChild("Frame2")
+        if frame2 then
+            return frame2:FindFirstChild("Keys")
+        end
+    end
+    return nil
+end
+
+-- Función para detectar y presionar la tecla rápidamente
+local function pressKeyFromFrame()
+    local keysFrame = checkFrame2Keys()
+    
+    if keysFrame then
+        for _, child in pairs(keysFrame:GetChildren()) do
+            if validKeys[child.Name] then -- Si el nombre del objeto es W, A, S o D
+                print("[✅] Presionando tecla: " .. child.Name)
+                virtualInput:SendKeyEvent(true, validKeys[child.Name], false, game) -- Presionar
+                task.wait(0.01) -- Tiempo reducido de espera
+                virtualInput:SendKeyEvent(false, validKeys[child.Name], false, game) -- Soltar la tecla
+                task.wait(0.01) -- Tiempo reducido de espera antes de presionar otra tecla
+                
+                -- Registrar el primer momento en que se presiona una tecla válida
+                if not firstKeyPressedTime then
+                    firstKeyPressedTime = tick()
+                end
+            end
+        end
+    end
+end
+
+-- Función de auto comer
+local function autoEat()
+    local player = game:GetService("Players").LocalPlayer
+    local backpack = player.Backpack
+    local comidas = {"Chicken", "Cheeseburger", "Milkshake", "Protein Shake", "Sushi", "Protein Drain"}
+
+    for _, comida in ipairs(comidas) do
+        local tool = backpack:FindFirstChild(comida)
+        if tool then
+            player.Character.Humanoid:EquipTool(tool)
+            task.wait(0) -- Pequeña pausa para equipar la comida
+            tool:Activate()  -- Se activa la comida
+            task.wait(2) -- Espera 2 segundos después de comer
+            player.Character.Humanoid:UnequipTools() -- Quita la comida equipada
+            break  -- Sale del ciclo una vez que ha comido una comida
+        end
+    end
+end
+
+-- Loop automático
+local function autoPressKeys()
+    while autoPullUps do
+        -- Comprobar si han pasado 49 segundos desde la primera tecla presionada
+        if firstKeyPressedTime and tick() - firstKeyPressedTime >= 49 then
+            if not isPaused then
+                print("[⚠️] Pausando por 5 segundos.")
+                isPaused = true
+                pauseCount = pauseCount + 1 -- Incrementar el contador de pausas
+                task.wait(5)  -- Pausa de 5 segundos
+                print("[✅] Reanudando.")
+                isPaused = false
+                firstKeyPressedTime = nil  -- Restablecer el temporizador
+
+                -- Cuando el conteo de pausas llega a 10, activar la comida
+                if pauseCount == 10 then
+                    print("[⚡] Pausa 10 alcanzada, activando comida...")
+                    autoEat()
+                    pauseCount = 0 -- Reiniciar el conteo
+                end
+            end
+        end
+        
+        if not isPaused then
+            pressKeyFromFrame()
+        end
+        task.wait(0.1)
+    end
+end
+
+-- Evento del botón
+autoPullUpsButton.MouseButton1Click:Connect(function()
+    autoPullUps = not autoPullUps
+    autoPullUpsButton.Text = "Auto Pull Ups: " .. (autoPullUps and "ON" or "OFF")
+    if autoPullUps then
+        autoPressKeys()
+    end
+end)
+
+-- Función para minimizar
+minimizeButton.MouseButton1Click:Connect(function()
+    frame.Visible = false
+    restoreButton.Visible = true
+end)
+
+-- Función para restaurar
+restoreButton.MouseButton1Click:Connect(function()
+    frame.Visible = true
+    restoreButton.Visible = false
+end)
