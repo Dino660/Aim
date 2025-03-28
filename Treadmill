@@ -51,7 +51,7 @@ end)
 local autoPullUpsButton = Instance.new("TextButton")
 autoPullUpsButton.Size = UDim2.new(0, 200, 0, 40)
 autoPullUpsButton.Position = UDim2.new(0, 10, 0, 40)
-autoPullUpsButton.Text = "Auto Pull Ups: OFF"
+autoPullUpsButton.Text = "AUTO TREADMILL: OFF"
 autoPullUpsButton.Parent = frame
 autoPullUpsButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 
