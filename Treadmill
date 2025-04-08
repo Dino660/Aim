@@ -120,7 +120,7 @@ end
 local function autoPressKeys()
     while autoPullUps do
         -- Comprobar si han pasado 59 segundos desde la primera tecla presionada
-        if firstKeyPressedTime and tick() - firstKeyPressedTime >= 49 then
+        if firstKeyPressedTime and tick() - firstKeyPressedTime >= 59 then
             if not isPaused then
                 print("[⚠️] Pausando por 5 segundos.")
                 isPaused = true
